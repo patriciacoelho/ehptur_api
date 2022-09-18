@@ -13,8 +13,13 @@ setup(
         "fastapi == 0.85.0",
         "Flask == 2.2.2",
         "Flask-PyMongo==2.3.0",
+        "google-auth == 2.11.0",
+        "google-auth-oauthlib == 0.5.3",
+        "oauthlib == 3.2.1",
         "pydantic == 1.10.2",
         "pymongo == 4.2.0",
-        "python-dotenv == 0.21.0"
+        "python-dotenv == 0.21.0",
+        "requests == 2.28.1",
+        "requests-oauthlib == 1.3.1",
     ],
 )

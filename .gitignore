@@ -42,6 +42,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 api/.env
+api/client_secret.json
 build/
 develop-eggs/
 dist/

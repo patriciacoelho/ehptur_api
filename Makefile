@@ -2,6 +2,7 @@ all:
 	@echo "install     - Install dependencies"
 	@echo "clean   - Delete generated files"
 	@echo "run    - Run application"
+	@echo "dev    - Run application in development mode"
 
 clean:
 	rm -rf build dist src/*.egg-info .tox .pytest_cache pip-wheel-metadata .DS_Store
@@ -11,7 +12,10 @@ clean:
 install:
 	python -m pip install -e .
 
+dev:
+	FLASK_DEBUG=true FLASK_APP=api flask run --cert adhoc
+
 run:
-	FLASK_DEBUG=true FLASK_APP=api flask run
+	FLASK_APP=api flask run
 
 .PHONY: all install clean dev
