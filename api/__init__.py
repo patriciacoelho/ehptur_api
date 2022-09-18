@@ -1,17 +1,31 @@
-from unicodedata import category
 from dotenv import load_dotenv
-from flask import Flask, request
+from flask import Flask, request, jsonify, session, abort, redirect
 from flask_pymongo import PyMongo
 from pymongo.errors import DuplicateKeyError
-from bson import json_util
-import json
+from google.oauth2 import id_token
+from google_auth_oauthlib.flow import Flow
+from pip._vendor import cachecontrol
 import os
-
+import pathlib
+import requests
+import google.auth.transport.requests
 from .objectid import PydanticObjectId
 from .models import Trip
 
 load_dotenv() # use dotenv to hide sensitive credential as environment variables
 app = Flask(__name__)
+
+app.secret_key = os.environ.get('APP_SECRET_KEY') # it is necessary to set a password when dealing with OAuth 2.0
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # this is to set our environment to https because OAuth 2.0 only supports https environments
+
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_AUTH_CLIENT_ID')  # enter your client id you got from Google console
+client_secrets_file = os.path.join(pathlib.Path(__file__).parent, 'client_secret.json')  # set the path to where the .json file you got Google console is
+
+flow = Flow.from_client_secrets_file(  # Flow is OAuth 2.0 a class that stores all the information on how we want to authorize our users
+    client_secrets_file=client_secrets_file,
+    scopes=['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email', 'openid'],  # here we are specifing what do we get after the authorization
+    redirect_uri='https://127.0.0.1:5000/login/callback'  # and the redirect URI is the point where the user will end up after the authorization
+)
 
 MONGO_ATLAS_DATABASE_URL=f'mongodb+srv://{os.environ.get("MONGO_ATLAS_USERNAME")}:{os.environ.get("MONGO_ATLAS_PASSWORD")}'\
             f'@{os.environ.get("MONGO_ATLAS_CLUSTER")}.pusjb.mongodb.net/{os.environ.get("MONGO_ATLAS_DB_NAME")}?'\
@@ -20,6 +34,47 @@ MONGO_ATLAS_DATABASE_URL=f'mongodb+srv://{os.environ.get("MONGO_ATLAS_USERNAME")
 app.config['MONGO_URI'] = os.environ.get("MONGO_DATABASE_URL") or MONGO_ATLAS_DATABASE_URL
 client = PyMongo(app)
 trips = client.db.trips
+
+def authorize():
+    if 'google_id' not in session:  # authorization required
+        return abort(401)
+    else:
+        return True
+
+@app.route('/login')  # the page where the user can login
+def login():
+    authorization_url, state = flow.authorization_url()  # asking the flow class for the authorization (login) url
+    session['state'] = state
+    return redirect(authorization_url)
+
+@app.route('/login/callback') # this is the page that will handle the callback process meaning process after the authorization
+def callback():
+    flow.fetch_token(authorization_response=request.url)
+
+    if not session['state'] == request.args['state']:
+        abort(500) # state does not match!
+
+    credentials = flow.credentials
+    request_session = requests.session()
+    cached_session = cachecontrol.CacheControl(request_session)
+    token_request = google.auth.transport.requests.Request(session=cached_session)
+
+    id_info = id_token.verify_oauth2_token(
+        id_token=credentials._id_token,
+        request=token_request,
+        audience=GOOGLE_CLIENT_ID
+    )
+
+    session['google_id'] = id_info.get('sub')
+    session['name'] = id_info.get('name')
+    session['email'] = id_info.get('email')
+
+    return 'Usuário autenticado com sucesso!'
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return 'Logout efetuado com sucesso!'
 
 @app.errorhandler(404)
 def resource_not_found(e):
@@ -42,6 +97,8 @@ def index():
 
 @app.route('/trips', methods=['GET'])
 def read_trips():
+    authorize()
+
     args = {}
     category_filter = request.args.getlist('categories') if len(request.args) and len(request.args['categories'])  else None
     string_search_filter = request.args.get('search') if len(request.args) else None
@@ -66,6 +123,8 @@ def read_trips():
 
 @app.route('/trips', methods=['POST'])
 def create_trip():
+    authorize()
+
     payload = request.get_json()
 
     trip = Trip(**payload)
