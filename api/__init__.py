@@ -10,7 +10,7 @@ import pathlib
 import requests
 import google.auth.transport.requests
 from .objectid import PydanticObjectId
-from .models import Trip
+from .models import Trip, User
 
 load_dotenv() # use dotenv to hide sensitive credential as environment variables
 app = Flask(__name__)
@@ -34,6 +34,7 @@ MONGO_ATLAS_DATABASE_URL=f'mongodb+srv://{os.environ.get("MONGO_ATLAS_USERNAME")
 app.config['MONGO_URI'] = os.environ.get("MONGO_DATABASE_URL") or MONGO_ATLAS_DATABASE_URL
 client = PyMongo(app)
 trips = client.db.trips
+users = client.db.users
 
 def authorize():
     if 'google_id' not in session:  # authorization required
@@ -65,9 +66,16 @@ def callback():
         audience=GOOGLE_CLIENT_ID
     )
 
-    session['google_id'] = id_info.get('sub')
-    session['name'] = id_info.get('name')
-    session['email'] = id_info.get('email')
+    user = {}
+    session['google_id'] = user['google_id'] = id_info.get('sub')
+    session['name'] = user['name'] = id_info.get('name')
+    session['email'] = user['email'] = id_info.get('email')
+    # session['profile_pic'] = user['profile_pic'] = id_info.get('picture')
+
+    doc = users.update_one({ 'google_id': session['google_id'] }, { '$set': user }, upsert=True)
+
+    # upserted_user = User(**user)
+    # upserted_user.id = PydanticObjectId(str(doc.upserted_id)) if doc.upserted_id else None
 
     return 'Usuário autenticado com sucesso!'
 
