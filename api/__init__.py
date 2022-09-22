@@ -142,3 +142,19 @@ def create_trip():
     trip.id = PydanticObjectId(str(doc.inserted_id))
 
     return trip.to_json()
+
+@app.route('/users/<google_id>/city', methods=['PUT'])
+def update_city_user(google_id):
+    authorize()
+
+    payload = request.get_json()
+
+    # TODO - Validar cidade, só pode ser uma das cidades que tiver no banco (um select)
+    if 'city' not in payload:
+        abort(422) # city is required
+
+    doc = users.update_one({ 'google_id': google_id }, { '$set': { 'city': payload['city'] } })
+    if not doc.matched_count:
+        abort(404)
+
+    return 'Cidade do usuário configurada com sucesso'

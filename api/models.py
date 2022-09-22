@@ -54,7 +54,7 @@ class User(BaseModel):
     id: Optional[PydanticObjectId] = Field(None, alias="_id")
     email: str
     name: str
-    city: Optional[str]
+    city: Optional[str] # TODO - alterar city para city_id
     google_id: str
 
     def to_json(self):
