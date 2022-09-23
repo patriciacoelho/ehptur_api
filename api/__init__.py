@@ -9,8 +9,10 @@ import os
 import pathlib
 import requests
 import google.auth.transport.requests
+from bson.objectid import ObjectId
+
 from .objectid import PydanticObjectId
-from .models import Trip, User
+from .models import Trip, User, City
 
 load_dotenv() # use dotenv to hide sensitive credential as environment variables
 app = Flask(__name__)
@@ -35,6 +37,7 @@ app.config['MONGO_URI'] = os.environ.get("MONGO_DATABASE_URL") or MONGO_ATLAS_DA
 client = PyMongo(app)
 trips = client.db.trips
 users = client.db.users
+cities = client.db.cities
 
 def authorize():
     if 'google_id' not in session:  # authorization required
@@ -143,17 +146,28 @@ def create_trip():
 
     return trip.to_json()
 
+@app.route('/cities', methods=['GET'])
+def read_cities():
+    authorize()
+
+    all_cities = cities.find()
+
+    return { "cities": [City(**doc).to_json() for doc in all_cities], }
+
 @app.route('/users/<google_id>/city', methods=['PUT'])
 def update_city_user(google_id):
     authorize()
 
     payload = request.get_json()
 
-    # TODO - Validar cidade, só pode ser uma das cidades que tiver no banco (um select)
-    if 'city' not in payload:
+    if 'city_id' not in payload:
         abort(422) # city is required
+    city = cities.find_one({ '_id': ObjectId(payload['city_id']) })
 
-    doc = users.update_one({ 'google_id': google_id }, { '$set': { 'city': payload['city'] } })
+    if not city:
+        abort(422)
+
+    doc = users.update_one({ 'google_id': google_id }, { '$set': { 'city_id': payload['city_id'] } })
     if not doc.matched_count:
         abort(404)
 
