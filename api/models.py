@@ -54,8 +54,22 @@ class User(BaseModel):
     id: Optional[PydanticObjectId] = Field(None, alias="_id")
     email: str
     name: str
-    city: Optional[str] # TODO - alterar city para city_id
+    city_id: Optional[str]
     google_id: str
+
+    def to_json(self):
+        return jsonable_encoder(self, exclude_none=True)
+
+    def to_bson(self):
+        data = self.dict(by_alias=True, exclude_none=True)
+        if data.get("_id") is None:
+            data.pop("_id", None)
+        return data
+
+class City(BaseModel):
+    id: Optional[PydanticObjectId] = Field(None, alias="_id")
+    name: str
+    uf: str
 
     def to_json(self):
         return jsonable_encoder(self, exclude_none=True)
