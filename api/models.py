@@ -33,7 +33,17 @@ class Operator(BaseModel):
     type: str
     name: str
     description: Optional[str]
-    social_networks: List[str]
+    social_networks: object
+    logo_url: Optional[str]
+
+    def to_json(self):
+        return jsonable_encoder(self, exclude_none=True)
+
+    def to_bson(self):
+        data = self.dict(by_alias=True, exclude_none=True)
+        if data.get("_id") is None:
+            data.pop("_id", None)
+        return data
 
 class Itinerary(BaseModel):
     cities: List[str]
