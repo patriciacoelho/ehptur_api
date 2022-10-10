@@ -12,7 +12,7 @@ import google.auth.transport.requests
 from bson.objectid import ObjectId
 
 from .objectid import PydanticObjectId
-from .models import Trip, User, City
+from .models import Trip, User, City, Operator
 
 load_dotenv() # use dotenv to hide sensitive credential as environment variables
 app = Flask(__name__)
@@ -38,6 +38,7 @@ client = PyMongo(app)
 trips = client.db.trips
 users = client.db.users
 cities = client.db.cities
+operators = client.db.operators
 
 def authorize():
     if 'google_id' not in session:  # authorization required
@@ -172,3 +173,19 @@ def update_city_user(google_id):
         abort(404)
 
     return 'Cidade do usuário configurada com sucesso'
+
+@app.route('/operators', methods=['GET'])
+def read_operators():
+    authorize()
+
+    all_operators = operators.find()
+
+    return { 'operators': [Operator(**doc).to_json() for doc in all_operators], }
+
+@app.route('/operators/<id>', methods=['GET'])
+def read_operator(id):
+    authorize()
+
+    doc = operators.find_one({ '_id': ObjectId(id) })
+
+    return { 'operator': Operator(**doc).to_json(), }
