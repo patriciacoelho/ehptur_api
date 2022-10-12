@@ -12,7 +12,7 @@ import google.auth.transport.requests
 from bson.objectid import ObjectId
 
 from .objectid import PydanticObjectId
-from .models import Trip, User, City, Operator
+from .models import Trip, User, City, Operator, Itinerary
 
 load_dotenv() # use dotenv to hide sensitive credential as environment variables
 app = Flask(__name__)
@@ -39,6 +39,7 @@ trips = client.db.trips
 users = client.db.users
 cities = client.db.cities
 operators = client.db.operators
+itineraries = client.db.itineraries
 
 def authorize():
     if 'google_id' not in session:  # authorization required
@@ -215,3 +216,29 @@ def read_operator(id):
     doc = operators.find_one({ '_id': ObjectId(id) })
 
     return { 'operator': Operator(**doc).to_json(), }
+
+@app.route('/itineraries/<id>', methods=['GET'])
+def read_itinerary(id):
+    authorize()
+
+    doc = itineraries.find_one({ '_id': ObjectId(id) })
+
+    itinerary = Itinerary(**doc).to_json()
+
+    operator_id = doc.get('operator_id')
+    operator = operators.find_one({ '_id': ObjectId(operator_id) })
+    itinerary['operator'] = Operator(**operator).to_json()
+
+    trip_id = doc.get('trip_id')
+    trip = trips.find_one({ '_id': ObjectId(trip_id) })
+    itinerary['trip'] = Trip(**trip).to_json()
+
+    pickup_city_ids = doc.get('pickup_city_ids')
+    pickup_cities = []
+    for city_id in pickup_city_ids:
+        city = cities.find_one({ '_id': ObjectId(city_id) })
+        if (city):
+            pickup_cities.append(City(**city).to_json())
+    itinerary['pickup_cities'] = pickup_cities
+
+    return { 'itinerary': itinerary, }
