@@ -19,6 +19,7 @@ class Trip(BaseModel):
     description: str
     categories: List[str]
     # categories: List[Category]
+    dropoff_location: str
 
     def to_json(self):
         return jsonable_encoder(self, exclude_none=True)
@@ -35,6 +36,8 @@ class Operator(BaseModel):
     description: Optional[str]
     social_networks: object
     logo_url: Optional[str]
+    inactive: Optional[bool]
+    pickup_city_ids: List[str]
 
     def to_json(self):
         return jsonable_encoder(self, exclude_none=True)
@@ -46,7 +49,7 @@ class Operator(BaseModel):
         return data
 
 class Itinerary(BaseModel):
-    cities: List[str]
+    pickup_city_ids: List[str]
     price: Optional[Union[str, int, float]]
     date: datetime
     description: Optional[str]
