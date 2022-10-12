@@ -178,7 +178,33 @@ def update_city_user(google_id):
 def read_operators():
     authorize()
 
-    all_operators = operators.find()
+    args = { 'inactive': { '$ne': True } }
+    string_search_filter = request.args.get('search') if len(request.args) else None
+    pickup_id_filter = request.args.get('pickup_id') if len(request.args) else None
+    pickup_filter = request.args.get('pickup') if len(request.args) else None
+    # TODO - Filtro por destino "dropoff"
+
+    if string_search_filter:
+        args = {
+            **args,
+            'name': { '$regex': string_search_filter, '$options': 'i' },
+        }
+
+    city = None
+    if pickup_id_filter:
+        city = cities.find_one({ '_id': ObjectId(pickup_id_filter) })
+    if not city and pickup_filter:
+        city = cities.find_one({ 'name': { '$regex': pickup_filter, '$options': 'i' } })
+
+    if city:
+        city_id = str(city.get('_id'))
+        args = {
+            **args,
+            'pickup_city_ids': { '$in': [city_id] },
+        }
+
+    print(args)
+    all_operators = operators.find(args)
 
     return { 'operators': [Operator(**doc).to_json() for doc in all_operators], }
 
