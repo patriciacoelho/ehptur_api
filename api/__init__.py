@@ -270,3 +270,17 @@ def read_taggeds(user_id):
     all_taggeds = taggeds.find(args)
 
     return { 'taggeds': [Tagged(**doc).to_json() for doc in all_taggeds], }
+
+@app.route('/taggeds', methods=['POST'])
+def create_tagged():
+    authorize()
+
+    payload = request.get_json()
+
+    tagged = Tagged(**payload)
+
+    doc = taggeds.insert_one(tagged.to_bson())
+
+    tagged.id = PydanticObjectId(str(doc.inserted_id))
+
+    return tagged.to_json()
