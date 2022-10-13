@@ -69,8 +69,17 @@ class Itinerary(BaseModel):
 class Tagged(BaseModel):
     already_know: bool
     user_id: str
-    trip_id: str
-    itinerary_id: str
+    trip_id: Optional[str]
+    itinerary_id: Optional[str]
+
+    def to_json(self):
+        return jsonable_encoder(self, exclude_none=True)
+
+    def to_bson(self):
+        data = self.dict(by_alias=True, exclude_none=True)
+        if data.get("_id") is None:
+            data.pop("_id", None)
+        return data
 
 class User(BaseModel):
     id: Optional[PydanticObjectId] = Field(None, alias="_id")
