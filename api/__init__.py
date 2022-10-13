@@ -12,7 +12,7 @@ import google.auth.transport.requests
 from bson.objectid import ObjectId
 
 from .objectid import PydanticObjectId
-from .models import Trip, User, City, Operator, Itinerary, Tagged
+from .models import Trip, User, City, Operator, Itinerary, Tagged, Category
 
 load_dotenv() # use dotenv to hide sensitive credential as environment variables
 app = Flask(__name__)
@@ -41,6 +41,7 @@ cities = client.db.cities
 operators = client.db.operators
 itineraries = client.db.itineraries
 taggeds = client.db.taggeds
+categories = client.db.categories
 
 def authorize():
     if 'google_id' not in session:  # authorization required
@@ -284,3 +285,11 @@ def create_tagged():
     tagged.id = PydanticObjectId(str(doc.inserted_id))
 
     return tagged.to_json()
+
+@app.route('/categories', methods=['GET'])
+def read_categories():
+    authorize()
+
+    all_categories = categories.find()
+
+    return { "categories": [Category(**doc).to_json() for doc in all_categories], }
