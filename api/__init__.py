@@ -12,7 +12,7 @@ import google.auth.transport.requests
 from bson.objectid import ObjectId
 
 from .objectid import PydanticObjectId
-from .models import Trip, User, City, Operator, Itinerary
+from .models import Trip, User, City, Operator, Itinerary, Tagged
 
 load_dotenv() # use dotenv to hide sensitive credential as environment variables
 app = Flask(__name__)
@@ -40,6 +40,7 @@ users = client.db.users
 cities = client.db.cities
 operators = client.db.operators
 itineraries = client.db.itineraries
+taggeds = client.db.taggeds
 
 def authorize():
     if 'google_id' not in session:  # authorization required
@@ -204,7 +205,6 @@ def read_operators():
             'pickup_city_ids': { '$in': [city_id] },
         }
 
-    print(args)
     all_operators = operators.find(args)
 
     return { 'operators': [Operator(**doc).to_json() for doc in all_operators], }
@@ -242,3 +242,31 @@ def read_itinerary(id):
     itinerary['pickup_cities'] = pickup_cities
 
     return { 'itinerary': itinerary, }
+
+@app.route('/taggeds/<user_id>', methods=['GET'])
+def read_taggeds(user_id):
+    authorize()
+
+    itinerary_id = request.args.get('itinerary_id') if len(request.args) else None
+    trip_id = request.args.get('trip_id') if len(request.args) else None
+    already_know = True if len(request.args) and request.args.get('already_know') == 'true' else False
+
+    args = {
+        'user_id': user_id,
+        'already_know': already_know,
+    }
+
+    if itinerary_id:
+        args = {
+            **args,
+            'itinerary_id': itinerary_id,
+        }
+    if trip_id:
+        args = {
+            **args,
+            'trip_id': trip_id,
+        }
+
+    all_taggeds = taggeds.find(args)
+
+    return { 'taggeds': [Tagged(**doc).to_json() for doc in all_taggeds], }
