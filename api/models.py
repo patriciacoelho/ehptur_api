@@ -76,6 +76,7 @@ class Itinerary(BaseModel):
         return data
 
 class Tagged(BaseModel):
+    id: Optional[PydanticObjectId] = Field(None, alias="_id")
     already_know: bool
     user_id: str
     trip_id: Optional[str]
