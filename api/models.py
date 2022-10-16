@@ -11,6 +11,7 @@ def parse_json(data):
     return json.loads(json_util.dumps(data))
 
 class Category(BaseModel):
+    id: Optional[PydanticObjectId] = Field(None, alias="_id")
     name: str
 
     def to_json(self):
@@ -40,6 +41,7 @@ class Trip(BaseModel):
         return data
 
 class Operator(BaseModel):
+    id: Optional[PydanticObjectId] = Field(None, alias="_id")
     type: str
     name: str
     description: Optional[str]
@@ -58,6 +60,7 @@ class Operator(BaseModel):
         return data
 
 class Itinerary(BaseModel):
+    id: Optional[PydanticObjectId] = Field(None, alias="_id")
     pickup_city_ids: List[str]
     price: Optional[Union[int, float]]
     date: datetime
