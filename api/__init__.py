@@ -10,6 +10,7 @@ import pathlib
 import requests
 import google.auth.transport.requests
 from bson.objectid import ObjectId
+from datetime import datetime
 
 from .objectid import PydanticObjectId
 from .models import Trip, User, City, Operator, Itinerary, Tagged, Category
@@ -252,8 +253,6 @@ def read_itineraries():
     
     # Filtros por: 
     #   Nome do destino (ou parte da descrição); $or: trip.name, trip.description, trip.dropoff_location
-    #   Faixa de preço (mínimo e máximo); $lte price
-    #   Período (data da viagem); $between date
     #   Categoria trip.categories
 
     pickup_id_filter = request.args.get('pickup_id') if len(request.args) else None
@@ -279,6 +278,24 @@ def read_itineraries():
             **args,
             'classification': classification_filter,
         }
+
+    min_price_filter = int(request.args.get('min_price')) if len(request.args) and request.args.get('min_price') else 0
+    max_price_filter = int(request.args.get('max_price')) if len(request.args) and request.args.get('max_price') else 15000
+    args = {
+        **args,
+        'price': { '$gte' : min_price_filter, '$lte' : max_price_filter},
+    }
+
+    ##   Período (data da viagem); $between date
+    start_date_filter = request.args.get('start_date') if len(request.args) and request.args.get('start_date') else '2022-01-01'
+    end_date_filter = request.args.get('end_date') if len(request.args) and request.args.get('end_date') else '2092-01-01'
+    print(start_date_filter)
+    args = {
+        **args,
+        'date': { '$gte' : datetime.fromisoformat(start_date_filter), '$lt' : datetime.fromisoformat(end_date_filter) },
+    }
+    print(args)
+
 
     docs = itineraries.find({ '$query': args, '$orderby': { 'date' : 1 } })
 

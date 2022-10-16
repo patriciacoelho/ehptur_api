@@ -59,7 +59,7 @@ class Operator(BaseModel):
 
 class Itinerary(BaseModel):
     pickup_city_ids: List[str]
-    price: Optional[Union[str, int, float]]
+    price: Optional[Union[int, float]]
     date: datetime
     description: Optional[str]
     classification: str
