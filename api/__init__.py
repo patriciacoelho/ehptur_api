@@ -251,13 +251,34 @@ def read_itineraries():
     args = {}
     
     # Filtros por: 
-    #   Origem; 
-    #   Nome do destino (ou parte da descrição); 
-    #   Faixa de preço (mínimo e máximo); 
-    #   Empresa; 
-    #   Período (data da viagem); 
-    #   Duração da viagem; 
-    #   Categoria
+    #   Nome do destino (ou parte da descrição); $or: trip.name, trip.description, trip.dropoff_location
+    #   Faixa de preço (mínimo e máximo); $lte price
+    #   Período (data da viagem); $between date
+    #   Categoria trip.categories
+
+    pickup_id_filter = request.args.get('pickup_id') if len(request.args) else None
+    if pickup_id_filter:
+        city = cities.find_one({ '_id': ObjectId(pickup_id_filter) })
+        if city:
+            city_id = str(city.get('_id'))
+            args = {
+                **args,
+                'pickup_city_ids': { '$in': [city_id] },
+            }
+
+    operator_id_filter = request.args.get('operator_id') if len(request.args) else None
+    if operator_id_filter:
+        args = {
+            **args,
+            'operator_id': operator_id_filter,
+        }
+
+    classification_filter = request.args.get('classification') if len(request.args) else None
+    if classification_filter:
+        args = {
+            **args,
+            'classification': classification_filter,
+        }
 
     docs = itineraries.find({ '$query': args, '$orderby': { 'date' : 1 } })
 
@@ -282,7 +303,7 @@ def read_itineraries():
         itinerary['pickup_cities'] = pickup_cities
         all_itineraries.append(itinerary)
 
-    return { 'itinerary': all_itineraries, }
+    return { 'itineraries': all_itineraries, }
 
 @app.route('/taggeds/<user_id>', methods=['GET'])
 def read_taggeds(user_id):
