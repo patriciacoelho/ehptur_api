@@ -244,6 +244,46 @@ def read_itinerary(id):
 
     return { 'itinerary': itinerary, }
 
+@app.route('/itineraries', methods=['GET'])
+def read_itineraries():
+    authorize()
+
+    args = {}
+    
+    # Filtros por: 
+    #   Origem; 
+    #   Nome do destino (ou parte da descrição); 
+    #   Faixa de preço (mínimo e máximo); 
+    #   Empresa; 
+    #   Período (data da viagem); 
+    #   Duração da viagem; 
+    #   Categoria
+
+    docs = itineraries.find({ '$query': args, '$orderby': { 'date' : 1 } })
+
+    all_itineraries = []
+    for doc in docs:
+        itinerary = Itinerary(**doc).to_json()
+
+        operator_id = doc.get('operator_id')
+        operator = operators.find_one({ '_id': ObjectId(operator_id) })
+        itinerary['operator'] = Operator(**operator).to_json()
+
+        trip_id = doc.get('trip_id')
+        trip = trips.find_one({ '_id': ObjectId(trip_id) })
+        itinerary['trip'] = Trip(**trip).to_json()
+
+        pickup_city_ids = doc.get('pickup_city_ids')
+        pickup_cities = []
+        for city_id in pickup_city_ids:
+            city = cities.find_one({ '_id': ObjectId(city_id) })
+            if (city):
+                pickup_cities.append(City(**city).to_json())
+        itinerary['pickup_cities'] = pickup_cities
+        all_itineraries.append(itinerary)
+
+    return { 'itinerary': all_itineraries, }
+
 @app.route('/taggeds/<user_id>', methods=['GET'])
 def read_taggeds(user_id):
     authorize()
