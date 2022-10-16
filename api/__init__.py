@@ -250,10 +250,32 @@ def read_itineraries():
     authorize()
 
     args = {}
-    
-    # Filtros por: 
-    #   Nome do destino (ou parte da descrição); $or: trip.name, trip.description, trip.dropoff_location
-    #   Categoria trip.categories
+
+    string_search_filter = request.args.get('search') if len(request.args) else None
+    category_filter = request.args.getlist('categories') if len(request.args) else None
+    if string_search_filter or category_filter:
+        trip_ids_filter = []
+        trips_query = {}
+        if string_search_filter:
+            trips_query = {
+                '$or': [
+                    { 'name': { '$regex': string_search_filter, '$options': 'i' } },
+                    { 'description': { '$regex': string_search_filter, '$options': 'i' } },
+                    { 'dropoff_location': { '$regex': string_search_filter, '$options': 'i' } }
+                ]
+            }
+        if category_filter:
+            trips_query = {
+                **trips_query,
+                'categories': { '$in': category_filter }
+            }
+        filtered_trips = trips.find(trips_query)
+        trip_ids_filter = [str(trip.get('_id')) for trip in filtered_trips]
+
+        args = {
+            **args,
+            'trip_id': { '$in': trip_ids_filter },
+        }
 
     pickup_id_filter = request.args.get('pickup_id') if len(request.args) else None
     if pickup_id_filter:
@@ -286,16 +308,12 @@ def read_itineraries():
         'price': { '$gte' : min_price_filter, '$lte' : max_price_filter},
     }
 
-    ##   Período (data da viagem); $between date
     start_date_filter = request.args.get('start_date') if len(request.args) and request.args.get('start_date') else '2022-01-01'
     end_date_filter = request.args.get('end_date') if len(request.args) and request.args.get('end_date') else '2092-01-01'
-    print(start_date_filter)
     args = {
         **args,
         'date': { '$gte' : datetime.fromisoformat(start_date_filter), '$lt' : datetime.fromisoformat(end_date_filter) },
     }
-    print(args)
-
 
     docs = itineraries.find({ '$query': args, '$orderby': { 'date' : 1 } })
 
