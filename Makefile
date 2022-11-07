@@ -13,7 +13,7 @@ install:
 	python -m pip install -e .
 
 dev:
-	FLASK_DEBUG=true FLASK_APP=api flask run --cert adhoc
+	FLASK_DEBUG=true FLASK_APP=api flask run --cert adhoc --host=0.0.0.0
 
 run:
 	FLASK_APP=api flask run
