@@ -113,7 +113,7 @@ def index():
 
 @app.route('/trips', methods=['GET'])
 def read_trips():
-    authorize()
+    # authorize()
 
     args = {}
     category_filter = request.args.getlist('categories') if len(request.args) and len(request.args['categories'])  else None
@@ -139,7 +139,7 @@ def read_trips():
 
 @app.route('/trips', methods=['POST'])
 def create_trip():
-    authorize()
+    # authorize()
 
     payload = request.get_json()
 
@@ -153,7 +153,7 @@ def create_trip():
 
 @app.route('/cities', methods=['GET'])
 def read_cities():
-    authorize()
+    # authorize()
 
     all_cities = cities.find()
 
@@ -161,7 +161,7 @@ def read_cities():
 
 @app.route('/users/<google_id>/city', methods=['PUT'])
 def update_city_user(google_id):
-    authorize()
+    # authorize()
 
     payload = request.get_json()
 
@@ -180,7 +180,7 @@ def update_city_user(google_id):
 
 @app.route('/operators', methods=['GET'])
 def read_operators():
-    authorize()
+    # authorize()
 
     args = { 'inactive': { '$ne': True } }
     string_search_filter = request.args.get('search') if len(request.args) else None
@@ -213,7 +213,7 @@ def read_operators():
 
 @app.route('/operators/<id>', methods=['GET'])
 def read_operator(id):
-    authorize()
+    # authorize()
 
     doc = operators.find_one({ '_id': ObjectId(id) })
 
@@ -221,7 +221,7 @@ def read_operator(id):
 
 @app.route('/itineraries/<id>', methods=['GET'])
 def read_itinerary(id):
-    authorize()
+    # authorize()
 
     doc = itineraries.find_one({ '_id': ObjectId(id) })
 
@@ -247,7 +247,7 @@ def read_itinerary(id):
 
 @app.route('/itineraries', methods=['GET'])
 def read_itineraries():
-    authorize()
+    # authorize()
 
     args = {}
 
@@ -342,7 +342,7 @@ def read_itineraries():
 
 @app.route('/taggeds/<user_id>', methods=['GET'])
 def read_taggeds(user_id):
-    authorize()
+    # authorize()
 
     itinerary_id = request.args.get('itinerary_id') if len(request.args) else None
     trip_id = request.args.get('trip_id') if len(request.args) else None
@@ -370,7 +370,7 @@ def read_taggeds(user_id):
 
 @app.route('/taggeds', methods=['POST'])
 def create_tagged():
-    authorize()
+    # authorize()
 
     payload = request.get_json()
 
@@ -384,7 +384,7 @@ def create_tagged():
 
 @app.route('/categories', methods=['GET'])
 def read_categories():
-    authorize()
+    # authorize()
 
     all_categories = categories.find()
 
