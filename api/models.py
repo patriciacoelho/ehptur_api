@@ -28,6 +28,7 @@ class Trip(BaseModel):
     name: str
     description: str
     categories: List[str]
+    image_url: Optional[str]
     # categories: List[Category]
     dropoff_location: str
 
