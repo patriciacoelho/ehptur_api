@@ -227,6 +227,8 @@ def read_itinerary(id):
 
     itinerary = Itinerary(**doc).to_json()
 
+    itinerary['formatted_date'] = datetime.strftime(doc.get('date'), '%d/%m/%y')
+
     operator_id = doc.get('operator_id')
     operator = operators.find_one({ '_id': ObjectId(operator_id) })
     itinerary['operator'] = Operator(**operator).to_json()
@@ -320,6 +322,8 @@ def read_itineraries():
     all_itineraries = []
     for doc in docs:
         itinerary = Itinerary(**doc).to_json()
+
+        itinerary['formatted_date'] = datetime.strftime(doc.get('date'), '%d/%m/%y')
 
         operator_id = doc.get('operator_id')
         operator = operators.find_one({ '_id': ObjectId(operator_id) })
