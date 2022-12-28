@@ -13,6 +13,7 @@ def parse_json(data):
 class Category(BaseModel):
     id: Optional[PydanticObjectId] = Field(None, alias="_id")
     name: str
+    image_url: Optional[str]
 
     def to_json(self):
         return jsonable_encoder(self, exclude_none=True)
