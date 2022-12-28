@@ -368,9 +368,37 @@ def read_taggeds(user_id):
             'trip_id': trip_id,
         }
 
-    all_taggeds = taggeds.find(args)
+    docs = taggeds.find(args)
 
-    return { 'taggeds': [Tagged(**doc).to_json() for doc in all_taggeds], }
+    all_taggeds = []
+    for doc in docs:
+        tagged = Tagged(**doc).to_json()
+
+        trip_id = doc.get('trip_id')
+        itinerary_id = doc.get('itinerary_id')
+        if (itinerary_id):
+            found_itinerary = itineraries.find_one({ '_id': ObjectId(itinerary_id) })
+            itinerary = Itinerary(**found_itinerary).to_json()
+
+            tagged['classification'] = itinerary.get('classification')
+            date = datetime.fromisoformat(itinerary.get('date'))
+            tagged['formatted_date'] = datetime.strftime(date, '%d/%m/%y')
+
+            operator_id = itinerary.get('operator_id')
+            found_operator = operators.find_one({ '_id': ObjectId(operator_id) })
+            operator = Operator(**found_operator).to_json()
+            tagged['operator_name'] = operator.get('name')
+
+            trip_id = itinerary.get('trip_id')
+
+        found_trip = trips.find_one({ '_id': ObjectId(trip_id) })
+        trip = Trip(**found_trip).to_json()
+        tagged['trip_name'] = trip.get('name')
+        tagged['image_url'] = trip.get('image_url')
+
+        all_taggeds.append(tagged)
+
+    return { 'taggeds': all_taggeds, }
 
 @app.route('/taggeds', methods=['POST'])
 def create_tagged():
