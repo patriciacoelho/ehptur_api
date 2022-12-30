@@ -253,6 +253,7 @@ def read_itineraries():
 
     args = {}
 
+    take_filter = int(request.args.get('take')) if len(request.args) and request.args.get('take') else 0
     string_search_filter = request.args.get('search') if len(request.args) else None
     category_filter = request.args.getlist('categories') if len(request.args) else None
     if string_search_filter or category_filter:
@@ -317,7 +318,7 @@ def read_itineraries():
         'date': { '$gte' : datetime.fromisoformat(start_date_filter), '$lt' : datetime.fromisoformat(end_date_filter) },
     }
 
-    docs = itineraries.find({ '$query': args, '$orderby': { 'date' : 1 } })
+    docs = itineraries.find({ '$query': args, '$orderby': { 'date' : 1 } }).limit(take_filter)
 
     all_itineraries = []
     for doc in docs:
