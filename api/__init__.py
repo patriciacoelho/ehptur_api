@@ -10,7 +10,7 @@ import pathlib
 import requests
 import google.auth.transport.requests
 from bson.objectid import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from .objectid import PydanticObjectId
 from .models import Trip, User, City, Operator, Itinerary, Tagged, Category
@@ -311,11 +311,14 @@ def read_itineraries():
         'price': { '$gte' : min_price_filter, '$lte' : max_price_filter},
     }
 
-    start_date_filter = request.args.get('start_date') if len(request.args) and request.args.get('start_date') else '2022-01-01'
-    end_date_filter = request.args.get('end_date') if len(request.args) and request.args.get('end_date') else '2092-01-01'
+    start_date_filter = datetime.fromisoformat(request.args.get('start_date')) if len(request.args) and request.args.get('start_date') else datetime.now()
+    end_date_filter = datetime.fromisoformat(request.args.get('end_date')) if len(request.args) and request.args.get('end_date') else datetime.now() + timedelta(days=3*365)
     args = {
         **args,
-        'date': { '$gte' : datetime.fromisoformat(start_date_filter), '$lt' : datetime.fromisoformat(end_date_filter) },
+        'date': {
+            '$gte' : start_date_filter,
+            '$lt' : end_date_filter,
+        },
     }
 
     docs = itineraries.find({ '$query': args, '$orderby': { 'date' : 1 } }).limit(take_filter)
