@@ -416,7 +416,8 @@ def create_tagged():
 
     tagged.id = PydanticObjectId(str(doc.inserted_id))
 
-    return tagged.to_json()
+    return { 'tagged': tagged.to_json() }
+
 
 @app.route('/categories', methods=['GET'])
 def read_categories():
