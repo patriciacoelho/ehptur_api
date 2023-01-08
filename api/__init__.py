@@ -251,9 +251,14 @@ def read_itinerary(id):
 def read_itineraries():
     # authorize()
 
+    order_by = { 'date' : 1 }
     args = {}
 
+    if len(request.args) and (request.args.get('asc_order_by') or request.args.get('desc_order_by')):
+        order_by = { request.args.get('asc_order_by'): 1 } if request.args.get('asc_order_by') else { request.args.get('desc_order_by'): -1 }
+
     take_filter = int(request.args.get('take')) if len(request.args) and request.args.get('take') else 0
+
     string_search_filter = request.args.get('search') if len(request.args) else None
     category_filter = request.args.getlist('categories') if len(request.args) else None
     if string_search_filter or category_filter:
@@ -321,7 +326,7 @@ def read_itineraries():
         },
     }
 
-    docs = itineraries.find({ '$query': args, '$orderby': { 'date' : 1 } }).limit(take_filter)
+    docs = itineraries.find({ '$query': args, '$orderby': order_by }).limit(take_filter)
 
     all_itineraries = []
     for doc in docs:
