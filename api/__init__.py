@@ -431,3 +431,6 @@ def read_categories():
     all_categories = categories.find()
 
     return { "categories": [Category(**doc).to_json() for doc in all_categories], }
+
+def create_app(object_name):
+    return app
