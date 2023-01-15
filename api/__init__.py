@@ -2,13 +2,13 @@ from dotenv import load_dotenv
 from flask import Flask, request, jsonify, session, abort, redirect
 from flask_pymongo import PyMongo
 from pymongo.errors import DuplicateKeyError
-from google.oauth2 import id_token
-from google_auth_oauthlib.flow import Flow
+# from google.oauth2 import id_token
+# from google_auth_oauthlib.flow import Flow
 from pip._vendor import cachecontrol
 import os
 import pathlib
 import requests
-import google.auth.transport.requests
+# import google.auth.transport.requests
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 
@@ -21,14 +21,14 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('APP_SECRET_KEY') # it is necessary to set a password when dealing with OAuth 2.0
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # this is to set our environment to https because OAuth 2.0 only supports https environments
 
-GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_AUTH_CLIENT_ID')  # enter your client id you got from Google console
-client_secrets_file = os.path.join(pathlib.Path(__file__).parent, 'client_secret.json')  # set the path to where the .json file you got Google console is
+# GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_AUTH_CLIENT_ID')  # enter your client id you got from Google console
+# client_secrets_file = os.path.join(pathlib.Path(__file__).parent, 'client_secret.json')  # set the path to where the .json file you got Google console is
 
-flow = Flow.from_client_secrets_file(  # Flow is OAuth 2.0 a class that stores all the information on how we want to authorize our users
-    client_secrets_file=client_secrets_file,
-    scopes=['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email', 'openid'],  # here we are specifing what do we get after the authorization
-    redirect_uri='https://127.0.0.1:5000/login/callback'  # and the redirect URI is the point where the user will end up after the authorization
-)
+# flow = Flow.from_client_secrets_file(  # Flow is OAuth 2.0 a class that stores all the information on how we want to authorize our users
+#     client_secrets_file=client_secrets_file,
+#     scopes=['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email', 'openid'],  # here we are specifing what do we get after the authorization
+#     redirect_uri='https://127.0.0.1:5000/login/callback'  # and the redirect URI is the point where the user will end up after the authorization
+# )
 
 MONGO_ATLAS_DATABASE_URL=f'mongodb+srv://{os.environ.get("MONGO_ATLAS_USERNAME")}:{os.environ.get("MONGO_ATLAS_PASSWORD")}'\
             f'@{os.environ.get("MONGO_ATLAS_CLUSTER")}.pusjb.mongodb.net/{os.environ.get("MONGO_ATLAS_DB_NAME")}?'\
@@ -50,42 +50,42 @@ def authorize():
     else:
         return True
 
-@app.route('/login')  # the page where the user can login
-def login():
-    authorization_url, state = flow.authorization_url()  # asking the flow class for the authorization (login) url
-    session['state'] = state
-    return redirect(authorization_url)
+# @app.route('/login')  # the page where the user can login
+# def login():
+#     authorization_url, state = flow.authorization_url()  # asking the flow class for the authorization (login) url
+#     session['state'] = state
+#     return redirect(authorization_url)
 
-@app.route('/login/callback') # this is the page that will handle the callback process meaning process after the authorization
-def callback():
-    flow.fetch_token(authorization_response=request.url)
+# @app.route('/login/callback') # this is the page that will handle the callback process meaning process after the authorization
+# def callback():
+#     flow.fetch_token(authorization_response=request.url)
 
-    if not session['state'] == request.args['state']:
-        abort(500) # state does not match!
+#     if not session['state'] == request.args['state']:
+#         abort(500) # state does not match!
 
-    credentials = flow.credentials
-    request_session = requests.session()
-    cached_session = cachecontrol.CacheControl(request_session)
-    token_request = google.auth.transport.requests.Request(session=cached_session)
+#     credentials = flow.credentials
+#     request_session = requests.session()
+#     cached_session = cachecontrol.CacheControl(request_session)
+#     token_request = google.auth.transport.requests.Request(session=cached_session)
 
-    id_info = id_token.verify_oauth2_token(
-        id_token=credentials._id_token,
-        request=token_request,
-        audience=GOOGLE_CLIENT_ID
-    )
+#     id_info = id_token.verify_oauth2_token(
+#         id_token=credentials._id_token,
+#         request=token_request,
+#         audience=GOOGLE_CLIENT_ID
+#     )
 
-    user = {}
-    session['google_id'] = user['google_id'] = id_info.get('sub')
-    session['name'] = user['name'] = id_info.get('name')
-    session['email'] = user['email'] = id_info.get('email')
-    # session['profile_pic'] = user['profile_pic'] = id_info.get('picture')
+#     user = {}
+#     session['google_id'] = user['google_id'] = id_info.get('sub')
+#     session['name'] = user['name'] = id_info.get('name')
+#     session['email'] = user['email'] = id_info.get('email')
+#     # session['profile_pic'] = user['profile_pic'] = id_info.get('picture')
 
-    doc = users.update_one({ 'google_id': session['google_id'] }, { '$set': user }, upsert=True)
+#     doc = users.update_one({ 'google_id': session['google_id'] }, { '$set': user }, upsert=True)
 
-    # upserted_user = User(**user)
-    # upserted_user.id = PydanticObjectId(str(doc.upserted_id)) if doc.upserted_id else None
+#     # upserted_user = User(**user)
+#     # upserted_user.id = PydanticObjectId(str(doc.upserted_id)) if doc.upserted_id else None
 
-    return 'Usuário autenticado com sucesso!'
+#     return 'Usuário autenticado com sucesso!'
 
 @app.route('/logout')
 def logout():
