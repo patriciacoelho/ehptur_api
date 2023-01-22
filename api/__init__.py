@@ -164,7 +164,7 @@ def read_cities():
 
 @app.route('/users/<google_id>/city', methods=['PUT'])
 def update_city_user(google_id):
-    # authorize()
+    authorize()
 
     payload = request.get_json()
 
@@ -358,7 +358,7 @@ def read_itineraries():
 
 @app.route('/taggeds/<user_id>', methods=['GET'])
 def read_taggeds(user_id):
-    # authorize()
+    authorize()
 
     itinerary_id = request.args.get('itinerary_id') if len(request.args) else None
     trip_id = request.args.get('trip_id') if len(request.args) else None
@@ -414,7 +414,7 @@ def read_taggeds(user_id):
 
 @app.route('/taggeds', methods=['POST'])
 def create_tagged():
-    # authorize()
+    authorize()
 
     payload = request.get_json()
 
